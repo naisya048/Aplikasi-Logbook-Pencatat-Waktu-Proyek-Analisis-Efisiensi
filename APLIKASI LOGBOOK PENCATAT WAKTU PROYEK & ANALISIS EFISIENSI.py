@@ -3,88 +3,63 @@ import pandas as pd
 import datetime
 import os
 import altair as alt
-import csv
-import os
 
-log_file = "logbook.csv"
+# ===============================
+# 1. LOAD / CREATE DATABASE CSV
+# ===============================
+FILE = "time_log.csv"
 
-# Buat file CSV jika belum ada
-if not os.path.exists(log_file):
-    with open(log_file, mode="w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["Hari", "Proyek", "Durasi (jam, menit)"])
+if os.path.exists(FILE):
+    df = pd.read_csv(FILE)
+else:
+    df = pd.DataFrame(columns=["Project", "Start_Time", "End_Time", "Duration_hours"])
+    df.to_csv(FILE, index=False)
 
+st.title("Aplikasi Logbook Pencatat Waktu Proyek & Analisis Efisiensi")
 
-def tambah_log():
-    print("\nPilih Hari Aktivitas:")
-    for i in range(1, 8 + 1):
-        print(f"{i}. Hari {i}")
+# ===============================
+# 2. INPUT FORM PENGISIAN DATA
+# ===============================
 
-    hari = input("Masukkan pilihan hari (1-8): ")
+if "start_time" not in st.session_state:
+    st.session_state.start_time = datetime.datetime.now().time()
 
-    proyek = input("Masukkan nama proyek/aktivitas: ")
-    durasi = float(input("Masukkan durasi pengerjaan (jam, menit): "))
+if "end_time" not in st.session_state:
+    st.session_state.end_time = datetime.datetime.now().time()
 
-    # Simpan ke file
-    with open(log_file, mode="a", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow([hari, proyek, durasi])
+project_name = st.text_input("Nama Proyek / Aktivitas")
 
-    print("Data berhasil disimpan!\n")
+start_time = st.time_input("Waktu Mulai", st.session_state.start_time, key="start_time_input")
+st.session_state.start_time = start_time
 
-
-def tampilkan_log():
-    print("\n=== DATA LOGBOOK ===")
-    with open(log_file, mode="r") as file:
-        reader = csv.reader(file)
-        for row in reader:
-            print(row)
-    print()
+end_time = st.time_input("Waktu Selesai", st.session_state.end_time, key="end_time_input")
+st.session_state.end_time = end_time
 
 
-def grafik_durasi():
-    hari = []
-    durasi = []
+# ===============================
+# 3. TAMPILKAN DATA
+# ===============================
+st.subheader(" Database Waktu")
+st.dataframe(df)
 
-    with open(log_file, mode="r") as file:
-        reader = csv.reader(file)
-        next(reader)  # skip header
-        for row in reader:
-            hari.append("Hari " + row[0])
-            durasi.append(float(row[2]))
+# ===============================
+# 4. VISUALISASI
+# ===============================
 
-    if len(durasi) == 0:
-        print("Belum ada data untuk ditampilkan.")
-        return
+df["Date"] = pd.to_datetime(df["Start_Time"], errors='coerce')  # convert jika diperlukan
 
-    plt.figure()
-    plt.bar(hari, durasi)
-    plt.title("Grafik Durasi Pekerjaan per Hari")
-    plt.xlabel("Hari")
-    plt.ylabel("Durasi (jam, menit)")
-    plt.xticks(rotation=45)
-    plt.tight_layout()
-    plt.show()
+st.subheader("Grafik Durasi Per Proyek")
+chart_project = alt.Chart(df).mark_bar().encode(
+    x="Project",
+    y="Duration_hours",
+    tooltip=["Project", "Duration_hours"]
+)
+st.altair_chart(chart_project, use_container_width=True)
 
-
-# Menu Utama
-while True:
-    print("=== APLIKASI LOGBOOK PENCATAT WAKTU PROYEK ===")
-    print("1. Tambah Log Aktivitas")
-    print("2. Tampilkan Logbook")
-    print("3. Tampilkan Grafik Durasi")
-    print("4. Keluar")
-
-    menu = input("Pilih menu (1-4): ")
-
-    if menu == "1":
-        tambah_log()
-    elif menu == "2":
-        tampilkan_log()
-    elif menu == "3":
-        grafik_durasi()
-    elif menu == "4":
-        print("Program selesai.")
-        break
-    else:
-        print("Menu tidak valid!\n")
+st.subheader("Tren Waktu (Hari / Urutan Input)")
+chart_trend = alt.Chart(df.reset_index()).mark_line(point=True).encode(
+    x="index",
+    y="Duration_hours",
+    tooltip=["Project", "Duration_hours"]
+)
+st.altair_chart(chart_trend, use_container_width=True)
