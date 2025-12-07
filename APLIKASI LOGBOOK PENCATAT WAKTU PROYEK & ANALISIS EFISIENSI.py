@@ -12,7 +12,7 @@ log_file = "logbook.csv"
 if not os.path.exists(log_file):
     with open(log_file, mode="w", newline="") as file:
         writer = csv.writer(file)
-        writer.writerow(["Hari", "Proyek", "Durasi (menit)"])
+        writer.writerow(["Hari", "Proyek", "Durasi (jam, menit)"])
 
 
 def tambah_log():
@@ -23,7 +23,7 @@ def tambah_log():
     hari = input("Masukkan pilihan hari (1-8): ")
 
     proyek = input("Masukkan nama proyek/aktivitas: ")
-    durasi = float(input("Masukkan durasi pengerjaan (menit): "))
+    durasi = float(input("Masukkan durasi pengerjaan (jam, menit): "))
 
     # Simpan ke file
     with open(log_file, mode="a", newline="") as file:
@@ -61,7 +61,7 @@ def grafik_durasi():
     plt.bar(hari, durasi)
     plt.title("Grafik Durasi Pekerjaan per Hari")
     plt.xlabel("Hari")
-    plt.ylabel("Durasi (menit)")
+    plt.ylabel("Durasi (jam, menit)")
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
