@@ -5,7 +5,6 @@ import os
 import altair as alt
 import csv
 import os
-import matplotlib.pyplot as plt
 
 log_file = "logbook.csv"
 
